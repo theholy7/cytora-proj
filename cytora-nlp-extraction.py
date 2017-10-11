@@ -5,6 +5,7 @@ import sys
 from argparse import ArgumentParser
 from itertools import chain
 
+import googlemaps
 import spacy
 
 logger = logging.getLogger(__name__)
@@ -71,6 +72,31 @@ def extract_entities(data, nlp):
     if len(geolocation_set) > 0:
         data['geo_locations'] = list(geolocation_set)
 
+    return data
+
+
+def extract_coordinates(data, key):
+    if 'geo_locations' not in data.keys():
+        return data
+
+    # googlemaps API repo example
+    gmaps = googlemaps.Client(key=key)
+    # Geocoding an address
+    final_geo = []
+    for geo_location in data['geo_locations']:
+        geo_data = {'name': geo_location, 'location': None}
+        geocode_result = gmaps.geocode(geo_location)
+
+        if 'geometry' in geocode_result[0]:
+            geometry = geocode_result[0].get('geometry', {})
+            geo_data['location'] = geometry.get('location')  # returns none if no location
+
+        final_geo.append(geo_data)
+
+    data['geo_locations'] = final_geo
+    logger.debug(json.dumps(data, indent=3))
+    return data
+
 
 def main():
     parser = ArgumentParser()
@@ -81,6 +107,9 @@ def main():
     group.add_argument('-d', '--dir',
                        help='Directory to extract entities from.')
 
+    parser.add_argument('-k', '--key',
+                        help='Googlemaps API Key')
+
     args = parser.parse_args()
 
     logger.info("Initializing SpaCy EN model...")
@@ -89,6 +118,9 @@ def main():
 
     data = parse_file(args.file)
     analysed_data = extract_entities(data, nlp)
+
+    if args.key:
+        analysed_data = extract_coordinates(analysed_data, args.key)
 
 
 if __name__ == '__main__':
