@@ -6,6 +6,7 @@ cytoolz==0.8.2
 dill==0.2.7.1
 en-core-web-sm==1.2.0
 ftfy==4.4.3
+googlemaps==2.5.1
 html5lib==0.999999999
 idna==2.6
 isort==4.2.15
