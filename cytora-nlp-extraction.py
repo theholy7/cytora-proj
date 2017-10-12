@@ -1,6 +1,7 @@
 import glob
 import json
 import logging
+import os
 import sys
 from argparse import ArgumentParser
 from itertools import chain
@@ -49,13 +50,13 @@ def extract_entities(data, nlp):
 
         if ent.label_ == 'PERSON':
             people_set.add(ent.text)
-            logger.info("Found {} of type PERSON".format(ent.text))
+            logger.debug("Found {} of type PERSON".format(ent.text))
         elif ent.label_ == 'ORG':
             organisation_set.add(ent.text)
-            logger.info("Found {} of type ORG".format(ent.text))
+            logger.debug("Found {} of type ORG".format(ent.text))
         elif ent.label_ == 'GPE':
             geolocation_set.add(ent.text)
-            logger.info("Found {} of type GPE".format(ent.text))
+            logger.debug("Found {} of type GPE".format(ent.text))
         else:
             raise Exception()
 
@@ -87,7 +88,7 @@ def extract_coordinates(data, key):
         geo_data = {'name': geo_location, 'location': None}
         geocode_result = gmaps.geocode(geo_location)
 
-        if 'geometry' in geocode_result[0]:
+        if geocode_result and 'geometry' in geocode_result[0]:
             geometry = geocode_result[0].get('geometry', {})
             geo_data['location'] = geometry.get('location')  # returns none if no location
 
@@ -116,11 +117,31 @@ def main():
     nlp = spacy.load('en')
     logger.info("Done!")
 
-    data = parse_file(args.file)
-    analysed_data = extract_entities(data, nlp)
+    if not os.path.exists("output"):
+        os.mkdir("output")
 
-    if args.key:
-        analysed_data = extract_coordinates(analysed_data, args.key)
+    if args.file:
+        data = parse_file(args.file)
+        analysed_data = extract_entities(data, nlp)
+
+        if args.key:
+            analysed_data = extract_coordinates(analysed_data, args.key)
+
+        with open("output/{}".format(os.path.basename(args.file)), 'w') as outfile:
+            json.dump(analysed_data, outfile)
+
+    if args.dir:
+        filelist = glob.glob(os.path.join(args.dir, '*.json'))
+
+        for filepath in filelist:
+            data = parse_file(filepath)
+            analysed_data = extract_entities(data, nlp)
+
+            if args.key:
+                analysed_data = extract_coordinates(analysed_data, args.key)
+
+            with open("output/{}".format(os.path.basename(filepath)), 'w') as outfile:
+                json.dump(analysed_data, outfile)
 
 
 if __name__ == '__main__':
