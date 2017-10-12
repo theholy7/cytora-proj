@@ -10,7 +10,7 @@ import googlemaps
 import spacy
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 stream_handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(stream_handler)
 

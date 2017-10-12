@@ -11,6 +11,7 @@ Run `python -m spacy download en` to download the EN model
 Don't forget to get a googlemaps API key with access to the Geocoding API
 
 Run the code with `python cytora-npl-extraction.py -f path/to/jsonfile -k google_api_key`
+Run the code with `python cytora-npl-extraction.py -d path/to/jsonfolder -k google_api_key` to go through multiple files
 
 ## TODO
 1. Tests
